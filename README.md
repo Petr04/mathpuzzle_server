@@ -1,7 +1,7 @@
 # Mathpuzzle server (API)
 
 ## Dependencies
-**`virtualenv` is recommended.**
+Make and activate virtual environment.
 
 To install all dependencies, run
 ```
