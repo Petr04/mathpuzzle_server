@@ -1,7 +1,7 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 
 from time import sleep
-from functools import reduce
+from itertools import chain
 
 from .models import Task, Question, TextQuestion
 
@@ -9,11 +9,13 @@ from .models import Task, Question, TextQuestion
 def all(request):
     response = {}
     for task in Task.objects.all():
-        question_titles = [question.title for question in task.questions]
+        question_titles = filter(lambda x: type(x) == str and x.strip(),
+            [question.title for question in task.questions])
 
         response[task.id] = {
             'id': task.id,
             'title': task.title,
+            'length': len(task.questions),
             'text': '\n'.join(question_titles),
         }
 
@@ -30,16 +32,20 @@ def detail(request, id):
         'questions': [],
     }
     for question in task.questions:
-        question_resp = {
+        question_resp = { # Common props
+            'id': question.id,
             'type': question.type,
+            'title': question.title,
+            'text': question.text,
         }
-        if question.type == 'text_question':
+
+        # Type-special props
+
+        if question.type == 'choiceQuestion':
             question_resp.update({
-                'id': question.id,
-                'type': question.type,
-                'title': question.title,
-                'text': question.text,
+                'choices': question.get_choices(),
             })
+
         response['questions'].append(question_resp)
 
     # sleep(2)
@@ -47,10 +53,21 @@ def detail(request, id):
     return JsonResponse(response)
 
 def check(request, id):
-    # можно будет потом вынести в переменную / функцию
-    questions = reduce(lambda x, y: x + y, [Sub.objects.all() for Sub in Question.__subclasses__()])
-    question = questions.get(id=id)
-    correct = request.GET['answer'] == question.answer
+    # Можно будет потом вынести в переменную / функцию
+    questions = chain([Sub.objects.all() for Sub in Question.__subclasses__()])
+    exists = False
+    for query_set in questions:
+        try: question = query_set.get(id=id)
+        except: pass
+        else: exists = True
+
+    if not exists: return Http404()
+
+    if question.type == 'choiceQuestion':
+        request_answer = int(request.GET['answer'])
+    else: request_answer = request.GET['answer']
+
+    correct = request_answer == question.answer
 
     # sleep(2)
 
