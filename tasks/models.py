@@ -34,6 +34,10 @@ class ChoiceQuestion(Question):
 
     type = 'choiceQuestion'
 
+type_to_model = {}
+for Q in Question.__subclasses__():
+    type_to_model[Q.type] = Q
+
 
 class Task(models.Model):
     title = models.CharField(max_length=64, null=True)

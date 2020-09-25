@@ -3,7 +3,7 @@ from django.http import JsonResponse, Http404
 from time import sleep
 from itertools import chain
 
-from .models import Task, Question, TextQuestion
+from .models import Task, type_to_model
 
 
 def all(request):
@@ -53,19 +53,13 @@ def detail(request, id):
     return JsonResponse(response)
 
 def check(request, id):
-    # Можно будет потом вынести в переменную / функцию
-    questions = chain([Sub.objects.all() for Sub in Question.__subclasses__()])
-    exists = False
-    for query_set in questions:
-        try: question = query_set.get(id=id)
-        except: pass
-        else: exists = True
-
-    if not exists: return Http404()
+    QuestionModel = type_to_model[request.GET['type']]
+    question = QuestionModel.objects.get(id=id)
 
     if question.type == 'choiceQuestion':
         request_answer = int(request.GET['answer'])
-    else: request_answer = request.GET['answer']
+    else:
+        request_answer = request.GET['answer']
 
     correct = request_answer == question.answer
 
