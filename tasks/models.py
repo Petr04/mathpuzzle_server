@@ -6,6 +6,7 @@ import json
 class Question(models.Model):
     title = models.CharField(max_length=32, blank=True, null=True)
     task = models.ForeignKey('Task', on_delete=models.CASCADE)
+    attempts = models.IntegerField(default=0) # 0 as infinity
 
     def __str__(self):
         return self.title or f'{self.type} id={self.id}'

@@ -36,6 +36,7 @@ def detail(request, id):
             'id': question.id,
             'type': question.type,
             'title': question.title,
+            'attempts': question.attempts,
             'text': question.text,
         }
 
