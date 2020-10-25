@@ -29,7 +29,7 @@ class ChoiceQuestion(Question):
         self.choices = json.dumps(x)
 
     def get_choices(self):
-        return json.loads(self.choices)
+        return json.loads(self.choices.encode('unicode_escape'))
 
     answer = models.IntegerField()
 
