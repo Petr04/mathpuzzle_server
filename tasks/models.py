@@ -1,12 +1,12 @@
-from django.db import models
-
 import json
+
+from django.db import models
 
 
 class Question(models.Model):
     title = models.CharField(max_length=32, blank=True, null=True)
     task = models.ForeignKey('Task', on_delete=models.CASCADE)
-    attempts = models.IntegerField(default=0) # 0 as infinity
+    attempts = models.IntegerField(default=0)  # 0 as infinity
 
     def __str__(self):
         return self.title or f'{self.type} id={self.id}'
@@ -14,10 +14,12 @@ class Question(models.Model):
     class Meta:
         abstract = True
 
+
 class TextQuestion(Question):
     text = models.TextField()
     answer = models.CharField(max_length=32)
     type = 'textQuestion'
+
 
 class ChoiceQuestion(Question):
     text = models.TextField()
@@ -34,6 +36,7 @@ class ChoiceQuestion(Question):
     answer = models.IntegerField()
 
     type = 'choiceQuestion'
+
 
 type_to_model = {}
 for Q in Question.__subclasses__():

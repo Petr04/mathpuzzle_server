@@ -1,4 +1,4 @@
 *.sqlite3
 __pycache__/
 env/
-secret_key.py
+mathpuzzle_server/secret_key.py
