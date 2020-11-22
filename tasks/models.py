@@ -47,7 +47,7 @@ class Task(models.Model):
     title = models.CharField(max_length=64, null=True)
 
     # check only when entire task is submitted
-    check_on_submit = models.BooleanField()
+    check_on_submit = models.BooleanField(default=False)
 
     @property
     def questions(self):
