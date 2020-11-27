@@ -13,6 +13,7 @@ class QuestionSerializer(serializers.Serializer):
 
 
 class AnswerSerializer(serializers.Serializer):
+    answer_num = serializers.IntegerField()
     text = serializers.CharField()
     is_true = serializers.BooleanField()
 

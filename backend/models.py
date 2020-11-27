@@ -36,6 +36,7 @@ class ChoiceQuestion(Question):
 
 class Answer(models.Model):
     question = models.ForeignKey(ChoiceQuestion, on_delete=models.CASCADE, related_name="answers")
+    answer_num = models.IntegerField()
     text = models.CharField(max_length=64)
     is_true = models.BooleanField(default=False)
 

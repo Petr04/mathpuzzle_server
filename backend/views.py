@@ -34,9 +34,9 @@ class QuestionsView(APIView):
         task = Task.objects.get(id=pk)
         data = request.data
         if data['type'] == 'text_field':
-            question = task.text_questions.get(id=data['question_id'])
+            question = task.text_questions.get(question_num=data['question_num'])
             return Response({'correct': data['answer'] == question.answer})
         elif data['type'] == 'choice_field':
-            question = task.choice_questions.get(id=data['question_id'])
-            answer = question.answers.get(id=int(data['answer']))
+            question = task.choice_questions.get(question_num=data['question_num'])
+            answer = question.answers.get(answer_num=int(data['answer']))
             return Response({"correct": answer.is_true})
