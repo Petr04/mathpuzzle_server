@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 
 from .models import Task, Question
 from .serializers import TaskSerializer, GetTaskSerializer, \
-    TaskSerializerNoQuestions, QuestionSerializer
+    TaskSerializerNoQuestions, QuestionSerializer, ChoiceQuestionSerializer
 
 
 # Create your views here.
@@ -26,11 +26,18 @@ class TasksView(APIView):
 class QuestionsView(APIView):
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
-        question_serializer = QuestionSerializer(task.questions, many=True)
         task_serializer = TaskSerializerNoQuestions(task)
+
+        print(task.questions.filter(type="choiceQuestion"))
+        question_serializer = QuestionSerializer(
+            task.questions.exclude(type="choiceQuestion"), many=True)
+        choice_question_serializer = ChoiceQuestionSerializer(
+            task.questions.filter(type="choiceQuestion"), many=True)
+
         return Response({
             "data": task_serializer.data,
             "questions": question_serializer.data
+                + choice_question_serializer.data,
         })
 
 

@@ -14,6 +14,9 @@ class QuestionSerializer(serializers.Serializer):
     attempts = serializers.IntegerField()
     text = serializers.CharField()
     type = serializers.ChoiceField(choices=Question.type_choices)
+
+
+class ChoiceQuestionSerializer(QuestionSerializer):
     answers = AnswerSerializer(many=True)
 
 
