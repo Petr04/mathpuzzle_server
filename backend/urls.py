@@ -5,6 +5,7 @@ from . import views
 app_name = 'backend'
 
 urlpatterns = [
-    path('tasks', views.TasksView.as_view()),
-    path('tasks/<int:pk>', views.QuestionsView.as_view())
+    path('', views.TasksView.as_view()),
+    path('<int:pk>/', views.QuestionsView.as_view()),
+    path('check/<int:pk>/', views.CheckView.as_view()),
 ]

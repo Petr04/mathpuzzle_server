@@ -15,7 +15,7 @@ class Question(models.Model):
     text = models.TextField()
     attempts = models.IntegerField(default=0)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='questions')
-    type_choices = (('text_question', 'text_question'), ('choice_question', 'choice_question'))
+    type_choices = (('textQuestion', 'textQuestion'), ('choiceQuestion', 'choiceQuestion'))
     type = models.CharField(choices=type_choices,
                             max_length=16)
 

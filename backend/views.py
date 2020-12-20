@@ -1,8 +1,9 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Task
-from .serializers import TaskSerializer, QuestionSerializer
+from .models import Task, Question
+from .serializers import TaskSerializer, GetTaskSerializer, \
+    TaskSerializerNoQuestions, QuestionSerializer, ChoiceQuestionSerializer
 
 
 # Create your views here.
@@ -10,7 +11,7 @@ from .serializers import TaskSerializer, QuestionSerializer
 class TasksView(APIView):
     def get(self, request):
         tasks = Task.objects.all()
-        tasks_serializer = TaskSerializer(tasks, many=True)
+        tasks_serializer = GetTaskSerializer(tasks, many=True)
 
         return Response({"tasks": tasks_serializer.data})
 
@@ -25,16 +26,31 @@ class TasksView(APIView):
 class QuestionsView(APIView):
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
-        question_serializer = QuestionSerializer(task.questions, many=True)
-        return Response({"questions": question_serializer.data})
+        task_serializer = TaskSerializerNoQuestions(task)
 
-    def post(self, request, pk):
-        task = Task.objects.get(id=pk)
-        data = request.data
-        question = list(task.questions.all())[data["question_num"]]
-        if data['type'] == 'text_field':
-            answer = question.answers.get(answer_num=0)
-            return Response({'correct': data['answer'] == answer.text})
-        elif data['type'] == 'choice_field':
-            answer = question.answers.get(answer_num=int(data['answer']))
-            return Response({"correct": answer.is_true})
+        question_serializer = QuestionSerializer(
+            task.questions.exclude(type="choiceQuestion"), many=True)
+        choice_question_serializer = ChoiceQuestionSerializer(
+            task.questions.filter(type="choiceQuestion"), many=True)
+
+        question_data = sorted(
+            question_serializer.data + choice_question_serializer.data,
+            key=lambda question: question['id']
+        )
+
+        return Response({
+            "data": task_serializer.data,
+            "questions": question_data,
+        })
+
+
+class CheckView(APIView):
+    def get(self, request, pk):
+        question = Question.objects.get(id=pk)
+
+        if question.type == 'textQuestion':
+            correct = question.answers.get(answer_num=0).text == request.GET['answer']
+        elif question.type == 'choiceQuestion':
+            correct = question.answers.get(answer_num=int(request.GET['answer'])).is_true
+
+        return Response({'correct': correct})
