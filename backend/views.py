@@ -28,16 +28,19 @@ class QuestionsView(APIView):
         task = Task.objects.get(id=pk)
         task_serializer = TaskSerializerNoQuestions(task)
 
-        print(task.questions.filter(type="choiceQuestion"))
         question_serializer = QuestionSerializer(
             task.questions.exclude(type="choiceQuestion"), many=True)
         choice_question_serializer = ChoiceQuestionSerializer(
             task.questions.filter(type="choiceQuestion"), many=True)
 
+        question_data = sorted(
+            question_serializer.data + choice_question_serializer.data,
+            key=lambda question: question['id']
+        )
+
         return Response({
             "data": task_serializer.data,
-            "questions": question_serializer.data
-                + choice_question_serializer.data,
+            "questions": question_data,
         })
 
 

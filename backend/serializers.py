@@ -19,6 +19,14 @@ class QuestionSerializer(serializers.Serializer):
 class ChoiceQuestionSerializer(QuestionSerializer):
     answers = AnswerSerializer(many=True)
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['answers'] = map(
+            lambda answer: answer['text'],
+            sorted(ret['answers'], key=lambda answer: answer['answer_num'])
+        )
+        return ret
+
 
 class TaskSerializerNoQuestions(serializers.Serializer):
     title = serializers.CharField(max_length=64)
