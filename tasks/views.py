@@ -2,8 +2,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Task, Question
-from .serializers import TaskSerializer, GetTaskSerializer, \
-    TaskSerializerNoQuestions, QuestionSerializer, ChoiceQuestionSerializer
+from .serializers import PostTaskSerializer, GetTaskSerializer, \
+    TaskSerializerNoQuestions, PostQuestionSerializer, GetQuestionSerializer, \
+    GetChoiceQuestionSerializer
 
 
 # Create your views here.
@@ -17,7 +18,7 @@ class TasksView(APIView):
 
     def post(self, request):
         task = request.data.get('task')
-        task_serializer = TaskSerializer(data=task)
+        task_serializer = PostTaskSerializer(data=task)
         if task_serializer.is_valid(raise_exception=True):
             task_saved = task_serializer.save()
         return Response({'success': "Task '{}' created successfully".format(task_saved.title)})
@@ -28,9 +29,9 @@ class QuestionsView(APIView):
         task = Task.objects.get(id=pk)
         task_serializer = TaskSerializerNoQuestions(task)
 
-        question_serializer = QuestionSerializer(
+        question_serializer = GetQuestionSerializer(
             task.questions.exclude(type="choiceQuestion"), many=True)
-        choice_question_serializer = ChoiceQuestionSerializer(
+        choice_question_serializer = GetChoiceQuestionSerializer(
             task.questions.filter(type="choiceQuestion"), many=True)
 
         question_data = sorted(
@@ -39,7 +40,7 @@ class QuestionsView(APIView):
         )
 
         return Response({
-            "data": task_serializer.data,
+            **task_serializer.data,
             "questions": question_data,
         })
 

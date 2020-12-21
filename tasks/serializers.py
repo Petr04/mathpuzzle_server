@@ -7,16 +7,23 @@ class AnswerSerializer(serializers.Serializer):
     answer_num = serializers.IntegerField()
     text = serializers.CharField()
 
+class PostAnswerSerializer(AnswerSerializer):
+    is_true = serializers.BooleanField()
 
 class QuestionSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
     title = serializers.CharField(max_length=32, allow_blank=True, allow_null=True)
     attempts = serializers.IntegerField()
     text = serializers.CharField()
     type = serializers.ChoiceField(choices=Question.type_choices)
 
 
-class ChoiceQuestionSerializer(QuestionSerializer):
+class PostQuestionSerializer(QuestionSerializer):
+    answers = PostAnswerSerializer(many=True)
+
+class GetQuestionSerializer(QuestionSerializer):
+    id = serializers.IntegerField()
+
+class GetChoiceQuestionSerializer(GetQuestionSerializer):
     answers = AnswerSerializer(many=True)
 
     def to_representation(self, instance):
@@ -42,16 +49,14 @@ class TaskSerializerNoQuestions(serializers.Serializer):
                 Answer.objects.create(question=question, **answer_data)
         return task
 
+class PostTaskSerializer(TaskSerializerNoQuestions):
+    questions = PostQuestionSerializer(many=True, allow_null=True)
 
-class TaskSerializer(TaskSerializerNoQuestions):
-    questions = QuestionSerializer(many=True, allow_null=True)
+class GetTaskSerializer(PostTaskSerializer):
+    id = serializers.IntegerField()
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         for i in range(len(ret["questions"])):
             ret["questions"][i] = ret["questions"][i]["title"]
         return ret
-
-
-class GetTaskSerializer(TaskSerializer):
-    id = serializers.IntegerField()
