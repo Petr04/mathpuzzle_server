@@ -1,69 +1,56 @@
-from django.http import JsonResponse, Http404
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from time import sleep
-from itertools import chain
+from .models import Task, Question
+from .serializers import TaskSerializer, GetTaskSerializer, \
+    TaskSerializerNoQuestions, QuestionSerializer, ChoiceQuestionSerializer
 
-from .models import Task, type_to_model
+
+# Create your views here.
+
+class TasksView(APIView):
+    def get(self, request):
+        tasks = Task.objects.all()
+        tasks_serializer = GetTaskSerializer(tasks, many=True)
+
+        return Response({"tasks": tasks_serializer.data})
+
+    def post(self, request):
+        task = request.data.get('task')
+        task_serializer = TaskSerializer(data=task)
+        if task_serializer.is_valid(raise_exception=True):
+            task_saved = task_serializer.save()
+        return Response({'success': "Task '{}' created successfully".format(task_saved.title)})
 
 
-def all(request):
-    response = {}
-    for task in Task.objects.all():
-        question_titles = filter(lambda x: type(x) == str and x.strip(),
-            [question.title for question in task.questions])
+class QuestionsView(APIView):
+    def get(self, request, pk):
+        task = Task.objects.get(id=pk)
+        task_serializer = TaskSerializerNoQuestions(task)
 
-        response[task.id] = {
-            'id': task.id,
-            'title': task.title,
-            'length': len(task.questions),
-            'text': '\n'.join(question_titles),
-        }
+        question_serializer = QuestionSerializer(
+            task.questions.exclude(type="choiceQuestion"), many=True)
+        choice_question_serializer = ChoiceQuestionSerializer(
+            task.questions.filter(type="choiceQuestion"), many=True)
 
-    # for loading animation demo
-    # sleep(2)
+        question_data = sorted(
+            question_serializer.data + choice_question_serializer.data,
+            key=lambda question: question['id']
+        )
 
-    return JsonResponse(response)
+        return Response({
+            "data": task_serializer.data,
+            "questions": question_data,
+        })
 
-def detail(request, id):
-    task = Task.objects.get(id=id)
-    response = {
-        'title': task.title,
-        'checkOnSubmit': task.check_on_submit,
-        'questions': [],
-    }
-    for question in task.questions:
-        question_resp = { # Common props
-            'id': question.id,
-            'type': question.type,
-            'title': question.title,
-            'attempts': question.attempts,
-            'text': question.text,
-        }
 
-        # Type-special props
+class CheckView(APIView):
+    def get(self, request, pk):
+        question = Question.objects.get(id=pk)
 
-        if question.type == 'choiceQuestion':
-            question_resp.update({
-                'choices': question.get_choices(),
-            })
+        if question.type == 'textQuestion':
+            correct = question.answers.get(answer_num=0).text == request.GET['answer']
+        elif question.type == 'choiceQuestion':
+            correct = question.answers.get(answer_num=int(request.GET['answer'])).is_true
 
-        response['questions'].append(question_resp)
-
-    # sleep(2)
-
-    return JsonResponse(response)
-
-def check(request, id):
-    QuestionModel = type_to_model[request.GET['type']]
-    question = QuestionModel.objects.get(id=id)
-
-    if question.type == 'choiceQuestion':
-        request_answer = int(request.GET['answer'])
-    else:
-        request_answer = request.GET['answer']
-
-    correct = request_answer == question.answer
-
-    # sleep(2)
-
-    return JsonResponse({'correct': correct})
+        return Response({'correct': correct})

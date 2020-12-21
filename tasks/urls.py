@@ -3,8 +3,9 @@ from django.urls import path
 from . import views
 
 app_name = 'tasks'
+
 urlpatterns = [
-    path('', views.all),
-    path('<int:id>/', views.detail),
-    path('check/<int:id>/', views.check),
+    path('', views.TasksView.as_view()),
+    path('<int:pk>/', views.QuestionsView.as_view()),
+    path('check/<int:pk>/', views.CheckView.as_view()),
 ]

@@ -33,8 +33,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'tasks.apps.TasksConfig',
-    'backend',
+    'tasks',
     'rest_framework',
     'corsheaders',
     'django.contrib.admin',
