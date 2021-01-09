@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class Task(models.Model):
-    title = models.CharField(max_length=64, null=True)
+    title = models.CharField(max_length=64)
     check_on_submit = models.BooleanField(default=False)
 
     def __str__(self):
@@ -11,7 +11,7 @@ class Task(models.Model):
 
 
 class Question(models.Model):
-    title = models.CharField(max_length=32, blank=True, null=True)
+    title = models.CharField(max_length=32)
     text = models.TextField()
     attempts = models.IntegerField(default=0)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='questions')
