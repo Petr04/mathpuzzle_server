@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'tasks',
+    'userapi',
     'rest_framework',
     'corsheaders',
     'django.contrib.admin',
@@ -110,13 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LANGUAGE_CODE = 'ru-ru'
-
 TIME_ZONE = 'Asia/Omsk'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
@@ -128,3 +126,14 @@ STATIC_URL = '/static/'
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+        ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'userapi.backends.JWTAuthentication',
+        )
+}
+
+AUTH_USER_MODEL = "userapi.User"
