@@ -2,3 +2,4 @@
 __pycache__/
 env/
 mathpuzzle_server/secret_key.py
+.idea/
