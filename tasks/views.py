@@ -1,5 +1,9 @@
+from django.http import HttpResponseForbidden
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 
 from .models import Task, Question
 from .serializers import PostTaskSerializer, GetTaskSerializer, \
@@ -10,6 +14,8 @@ from .serializers import PostTaskSerializer, GetTaskSerializer, \
 # Create your views here.
 
 class TasksView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         tasks = Task.objects.all().order_by('-id')
         tasks_serializer = GetTaskSerializer(tasks, many=True)
@@ -17,6 +23,9 @@ class TasksView(APIView):
         return Response({"tasks": tasks_serializer.data})
 
     def post(self, request):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+
         task = request.data.get('task')
         task_serializer = PostTaskSerializer(data=task)
         if task_serializer.is_valid(raise_exception=True):
@@ -25,6 +34,8 @@ class TasksView(APIView):
 
 
 class QuestionsView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
         task_serializer = TaskSerializerNoQuestions(task)
@@ -46,6 +57,8 @@ class QuestionsView(APIView):
 
 
 class CheckView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, pk):
         question = Question.objects.get(id=pk)
 
