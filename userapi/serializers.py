@@ -13,8 +13,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=255, read_only=True)
 
     class Meta:
-        model=User
-        fields = ('email', 'username', 'password', 'token')
+        model = User
+        fields = (
+            'email', 'username', 'password',
+            'first_name', 'last_name',
+            'token',
+        )
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
@@ -31,7 +35,7 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password', None)
 
         if username is None:
-            raise serializers.ValidationError('Логин неообходим для входа')
+            raise serializers.ValidationError('Логин необходим для входа')
         if password is None:
             raise serializers.ValidationError('Пароль необходим для входа')
 
@@ -42,4 +46,12 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError('Пользователь отключен')
 
-        return {'token':user.token}
+        return {'token': user.token}
+
+class UserDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
