@@ -2,8 +2,7 @@ import jwt
 
 from django.db import models
 
-from datetime import datetime
-from datetime import timedelta
+import datetime as dt
 
 from django.conf import settings
 from django.core import validators
@@ -40,11 +39,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.first_name
 
     def _generate_jwt_token(self):
-        dt = datetime.now() + timedelta(days=30)
+        now = dt.datetime.now() 
+        exp_dt = now + dt.timedelta(days=30)
+        fmtstr = '%d/%m/%Y, %H:%M:%S'
 
         token = jwt.encode({
             'id': self.pk,
-            'exp': int(dt.second)
+            'exp': exp_dt.timestamp()
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token

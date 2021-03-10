@@ -39,3 +39,13 @@ class UserDataAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserDataSerializer
     queryset = User.objects.all()
     lookup_field = 'username'
+
+
+class IsRegistered(APIView): # is username registered
+    permission_classes = [AllowAny]
+    def get(self, request):
+        data = dict([list(request.GET.items())[0]])
+        users = User.objects.filter(**data)
+        return Response({
+            "is_registered": users.count() > 0
+        })

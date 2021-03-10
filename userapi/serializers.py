@@ -42,7 +42,7 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=username, password=password)
 
         if user is None:
-            raise serializers.ValidationError('Пользователя с таким логином или паролем не существует')
+            raise serializers.ValidationError('Неверный логин или пароль')
         if not user.is_active:
             raise serializers.ValidationError('Пользователь отключен')
 
