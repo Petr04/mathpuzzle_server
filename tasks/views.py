@@ -6,9 +6,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 
 from .models import Task, Question
-from .serializers import PostTaskSerializer, GetTaskSerializer, \
-    TaskSerializerNoQuestions, PostQuestionSerializer, GetQuestionSerializer, \
-    GetChoiceQuestionSerializer
+from .serializers import TaskSerializer, QuestionSerializer, ChoiceQuestionSerializer
 
 
 # Create your views here.
@@ -18,7 +16,7 @@ class TasksView(APIView):
 
     def get(self, request):
         tasks = Task.objects.all().order_by('-id')
-        tasks_serializer = GetTaskSerializer(tasks, many=True)
+        tasks_serializer = TaskSerializer(tasks, many=True, context={'method': request.method})
 
         return Response({"tasks": tasks_serializer.data})
 
@@ -27,7 +25,7 @@ class TasksView(APIView):
             return HttpResponseForbidden()
 
         task = request.data.get('task')
-        task_serializer = PostTaskSerializer(data=task)
+        task_serializer = TaskSerializer(data=task)
         if task_serializer.is_valid(raise_exception=True):
             task_saved = task_serializer.save()
         return Response({'success': "Task '{}' created successfully".format(task_saved.title)})
@@ -38,11 +36,11 @@ class QuestionsView(APIView):
 
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
-        task_serializer = TaskSerializerNoQuestions(task)
+        task_serializer = TaskSerializer(task)
 
-        question_serializer = GetQuestionSerializer(
+        question_serializer = QuestionSerializer(
             task.questions.exclude(type="choiceQuestion"), many=True)
-        choice_question_serializer = GetChoiceQuestionSerializer(
+        choice_question_serializer = ChoiceQuestionSerializer(
             task.questions.filter(type="choiceQuestion"), many=True)
 
         question_data = sorted(

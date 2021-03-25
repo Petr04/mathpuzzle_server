@@ -6,28 +6,22 @@ from .models import Task, Question, Answer
 class AnswerSerializer(serializers.Serializer):
     answer_num = serializers.IntegerField()
     text = serializers.CharField()
+    is_true = serializers.BooleanField(write_only=True)
 
-class PostAnswerSerializer(AnswerSerializer):
-    is_true = serializers.BooleanField()
 
 class QuestionSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=32, allow_blank=True, allow_null=True)
     attempts = serializers.IntegerField()
     text = serializers.CharField()
     type = serializers.ChoiceField(choices=Question.type_choices)
+    id = serializers.IntegerField(read_only=True)
+    answers = AnswerSerializer(many=True, write_only=True)
 
-
-class PostQuestionSerializer(QuestionSerializer):
-    answers = PostAnswerSerializer(many=True)
-
-class GetQuestionSerializer(QuestionSerializer):
-    id = serializers.IntegerField()
-
-class GetChoiceQuestionSerializer(GetQuestionSerializer):
+class ChoiceQuestionSerializer(QuestionSerializer):
     answers = AnswerSerializer(many=True)
-
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+
         ret['answers'] = map(
             lambda answer: answer['text'],
             sorted(ret['answers'], key=lambda answer: answer['answer_num'])
@@ -35,9 +29,11 @@ class GetChoiceQuestionSerializer(GetQuestionSerializer):
         return ret
 
 
-class TaskSerializerNoQuestions(serializers.Serializer):
+class TaskSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=64)
     check_on_submit = serializers.BooleanField(default=False)
+    questions = QuestionSerializer(many=True, allow_null=True)
+    id = serializers.IntegerField(read_only=True)
 
     def create(self, validated_data):
         questions_data = validated_data.pop("questions")
@@ -49,14 +45,11 @@ class TaskSerializerNoQuestions(serializers.Serializer):
                 Answer.objects.create(question=question, **answer_data)
         return task
 
-class PostTaskSerializer(TaskSerializerNoQuestions):
-    questions = PostQuestionSerializer(many=True, allow_null=True)
-
-class GetTaskSerializer(PostTaskSerializer):
-    id = serializers.IntegerField()
-
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        if self.context.get('method') != 'GET':
+            return ret
+
         for i in range(len(ret["questions"])):
             ret["questions"][i] = ret["questions"][i]["title"]
         return ret
