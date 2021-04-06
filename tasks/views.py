@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 
-from .models import Task, Question
+from .models import Task, Question, Attempt
+from userapi.models import User
 from .serializers import TaskSerializer, QuestionSerializer, ChoiceQuestionSerializer
 
 
@@ -64,5 +65,12 @@ class CheckView(APIView):
             correct = question.answers.get(answer_num=0).text == request.GET['answer']
         elif question.type == 'choiceQuestion':
             correct = question.answers.get(answer_num=int(request.GET['answer'])).is_true
+
+        attempt = Attempt.objects.create(
+            question=question,
+            user=request.user,
+            value=correct,
+        )
+        attempt.save()
 
         return Response({'correct': correct})

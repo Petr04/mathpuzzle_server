@@ -11,7 +11,7 @@ class AnswerSerializer(serializers.Serializer):
 
 class QuestionSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=32, allow_blank=True, allow_null=True)
-    attempts = serializers.IntegerField()
+    attempts_max = serializers.IntegerField()
     text = serializers.CharField()
     type = serializers.ChoiceField(choices=Question.type_choices)
     id = serializers.IntegerField(read_only=True)

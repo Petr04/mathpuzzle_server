@@ -1,4 +1,5 @@
 from django.db import models
+from userapi.models import User
 
 
 # Create your models here.
@@ -13,7 +14,7 @@ class Task(models.Model):
 class Question(models.Model):
     title = models.CharField(max_length=32)
     text = models.TextField()
-    attempts = models.IntegerField(default=0)
+    attempts_max = models.IntegerField(default=0)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='questions')
     type_choices = (('textQuestion', 'textQuestion'), ('choiceQuestion', 'choiceQuestion'))
     type = models.CharField(choices=type_choices,
@@ -31,3 +32,9 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class Attempt(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='attempts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attempts')
+    value = models.BooleanField()
