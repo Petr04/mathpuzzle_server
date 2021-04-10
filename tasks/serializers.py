@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from userapi.serializers import UserDataSerializer
 from .models import Task, Question, Answer
 
 
@@ -9,6 +10,11 @@ class AnswerSerializer(serializers.Serializer):
     is_true = serializers.BooleanField(write_only=True)
 
 
+class AttemptSerializer(serializers.Serializer):
+    user = UserDataSerializer()
+    value = serializers.BooleanField()
+
+
 class QuestionSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=32, allow_blank=True, allow_null=True)
     attempts_max = serializers.IntegerField()
@@ -16,6 +22,7 @@ class QuestionSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=Question.type_choices)
     id = serializers.IntegerField(read_only=True)
     answers = AnswerSerializer(many=True, write_only=True)
+    attempts = AttemptSerializer(many=True, read_only=True)
 
 class ChoiceQuestionSerializer(QuestionSerializer):
     answers = AnswerSerializer(many=True)

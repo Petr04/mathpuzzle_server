@@ -2,12 +2,14 @@ from django.http import HttpResponseForbidden
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 
 from .models import Task, Question, Attempt
 from userapi.models import User
-from .serializers import TaskSerializer, QuestionSerializer, ChoiceQuestionSerializer
+from .serializers import TaskSerializer, QuestionSerializer, ChoiceQuestionSerializer, \
+    AttemptSerializer
 
 
 # Create your views here.
@@ -74,3 +76,20 @@ class CheckView(APIView):
         attempt.save()
 
         return Response({'correct': correct})
+
+
+def exclude_keys(d, keys):
+    return {k: v for k, v in d.items() if k not in keys}
+
+class AttemptsView(ListAPIView):
+    serializer_class = AttemptSerializer
+    def get_queryset(self):
+        filters = {}
+
+        if 'task' in self.request.GET:
+            filters['question__task'] = self.request.GET['task']
+        filters.update(
+            exclude_keys(dict(self.request.GET.items()), ('task'))
+        )
+
+        return Attempt.objects.filter(**filters)

@@ -13,7 +13,7 @@ from .managers import UserManager
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(db_index=True, max_length=255, unique=True)
-    email = models.EmailField(validators=[validators.validate_email], unique=True, blank=False)
+    email = models.EmailField(primary_key=True, validators=[validators.validate_email], unique=True, blank=False)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
 
