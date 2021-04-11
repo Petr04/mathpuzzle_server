@@ -8,8 +8,8 @@ from rest_framework.permissions import AllowAny
 
 from .models import Task, Question, Attempt
 from userapi.models import User
-from .serializers import TaskSerializer, QuestionSerializer, ChoiceQuestionSerializer, \
-    AttemptSerializer
+from .serializers import TaskSerializer, QuestionSerializer, \
+    ChoiceQuestionSerializer, AttemptSerializer
 
 
 # Create your views here.
@@ -19,7 +19,9 @@ class TasksView(APIView):
 
     def get(self, request):
         tasks = Task.objects.all().order_by('-id')
-        tasks_serializer = TaskSerializer(tasks, many=True, context={'method': request.method})
+        tasks_serializer = TaskSerializer(tasks, many=True, context={
+            'short': True,
+        })
 
         return Response({"tasks": tasks_serializer.data})
 
@@ -28,10 +30,13 @@ class TasksView(APIView):
             return HttpResponseForbidden()
 
         task = request.data.get('task')
-        task_serializer = TaskSerializer(data=task)
+        task_serializer = TaskSerializer(data=task, context={
+            'request': request
+        })
         if task_serializer.is_valid(raise_exception=True):
             task_saved = task_serializer.save()
-        return Response({'success': "Task '{}' created successfully".format(task_saved.title)})
+        return Response({'success': "Task '{}' created successfully"
+            .format(task_saved.title)})
 
 
 class QuestionsView(APIView):
@@ -64,9 +69,11 @@ class CheckView(APIView):
         question = Question.objects.get(id=pk)
 
         if question.type == 'textQuestion':
-            correct = question.answers.get(answer_num=0).text == request.GET['answer']
+            correct = question.answers.get(
+                answer_num=0).text == request.GET['answer']
         elif question.type == 'choiceQuestion':
-            correct = question.answers.get(answer_num=int(request.GET['answer'])).is_true
+            correct = question.answers.get(
+                answer_num=int(request.GET['answer'])).is_true
 
         attempt = Attempt.objects.create(
             question=question,
