@@ -96,7 +96,34 @@ class AttemptsView(ListAPIView):
         if 'task' in self.request.GET:
             filters['question__task'] = self.request.GET['task']
         filters.update(
-            exclude_keys(dict(self.request.GET.items()), ('task'))
+            exclude_keys(dict(self.request.GET.items()), ('task', 'last'))
         )
 
-        return Attempt.objects.filter(**filters)
+        ret = Attempt.objects.filter(**filters)
+
+        if self.request.GET.get('last'):
+            # get last attempt from each user per question
+
+            if 'question' in self.request.GET:
+                questions = Question.objects.filter(
+                    id=self.request.GET['question'])
+            elif 'task' in self.request.GET:
+                questions = Question.objects.filter(
+                    task=self.request.GET['task'])
+
+            lastUserAttemptIDs = []
+            for question in list(questions):
+                emailSet = list(map(lambda x: x[0],
+                    set(question.attempts.values_list('user'))))
+
+                for email in emailSet:
+                    user = User.objects.get(email=email)
+                    id_ = (
+                        Attempt.objects.filter(user=user)
+                        & Attempt.objects.filter(question=question)
+                    ).last().id
+                    lastUserAttemptIDs.append(id_)
+
+            return Attempt.objects.filter(id__in=lastUserAttemptIDs)
+
+        return ret
