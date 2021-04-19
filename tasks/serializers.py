@@ -14,6 +14,14 @@ class AttemptSerializer(serializers.Serializer):
     user = UserDataSerializer()
     value = serializers.BooleanField()
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        first_question_id = instance.question.task.questions.earliest('id').id
+        current_question_id = instance.question.id
+        ret['question_number'] = current_question_id - first_question_id
+
+        return ret
+
 
 class QuestionSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=32, allow_blank=True,
