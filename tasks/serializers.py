@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from userapi.serializers import UserDataSerializer
-from .models import Task, Question, Answer
+from .models import Task, Question, Answer, Attempt
 
 
 class AnswerSerializer(serializers.Serializer):
@@ -13,6 +13,8 @@ class AnswerSerializer(serializers.Serializer):
 class AttemptSerializer(serializers.Serializer):
     user = UserDataSerializer()
     value = serializers.BooleanField()
+    answer = serializers.CharField()
+    id = serializers.IntegerField(read_only=True)
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -69,10 +71,20 @@ class TaskSerializer(serializers.Serializer):
         return task
 
     def to_representation(self, instance):
+        request = self.context.get('request')
+        if request is None:
+            raise KeyError('No request object.'
+                ' Please provide it through context param.')
+
         ret = super().to_representation(instance)
         
-        if self.context.get('short'):
-            for i in range(len(ret["questions"])):
-                ret["questions"][i] = ret["questions"][i]["title"]
+        if not self.context.get('short'):
+            return ret
+
+        for i in range(len(ret["questions"])):
+            ret["questions"][i] = ret["questions"][i]["title"]
+
+        ret['status'] = instance.get_status(request.user)
+        print(instance, instance.is_finished(request.user), ret['status'])
 
         return ret

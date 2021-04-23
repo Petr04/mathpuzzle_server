@@ -21,6 +21,7 @@ class TasksView(APIView):
         tasks = Task.objects.all().order_by('-id')
         tasks_serializer = TaskSerializer(tasks, many=True, context={
             'short': True,
+            'request': request,
         })
 
         return Response({"tasks": tasks_serializer.data})
@@ -44,7 +45,9 @@ class QuestionsView(APIView):
 
     def get(self, request, pk):
         task = Task.objects.get(id=pk)
-        task_serializer = TaskSerializer(task)
+        task_serializer = TaskSerializer(task, context={
+            'request': request
+        })
 
         question_serializer = QuestionSerializer(
             task.questions.exclude(type="choiceQuestion"), many=True)
@@ -79,6 +82,7 @@ class CheckView(APIView):
             question=question,
             user=request.user,
             value=correct,
+            answer=request.GET['answer']
         )
         attempt.save()
 
@@ -111,19 +115,6 @@ class AttemptsView(ListAPIView):
                 questions = Question.objects.filter(
                     task=self.request.GET['task'])
 
-            lastUserAttemptIDs = []
-            for question in list(questions):
-                emailSet = list(map(lambda x: x[0],
-                    set(question.attempts.values_list('user'))))
-
-                for email in emailSet:
-                    user = User.objects.get(email=email)
-                    id_ = (
-                        Attempt.objects.filter(user=user)
-                        & Attempt.objects.filter(question=question)
-                    ).last().id
-                    lastUserAttemptIDs.append(id_)
-
-            return Attempt.objects.filter(id__in=lastUserAttemptIDs)
+            return Attempt.last(questions)
 
         return ret
