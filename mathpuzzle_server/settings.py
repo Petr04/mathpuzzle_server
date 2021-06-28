@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from .secret_key import secret_key
@@ -124,8 +125,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
+# Media files
+
+MEDIA_ROOT = BASE_DIR / 'files' / 'media'
+MEDIA_URL = '/media/'
+
+
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = ['*']
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
