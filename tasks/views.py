@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 from .models import Task, Question, Attempt
 from userapi.models import User
 from .serializers import TaskSerializer, QuestionSerializer, \
-    ChoiceQuestionSerializer, AttemptSerializer
+    ChoiceQuestionSerializer, OrderQuestionSerializer, AttemptSerializer
 
 
 # Create your views here.
@@ -50,12 +50,16 @@ class QuestionsView(APIView):
         })
 
         question_serializer = QuestionSerializer(
-            task.questions.exclude(type="choiceQuestion"), many=True)
+            task.questions.filter(type="textQuestion"), many=True)
         choice_question_serializer = ChoiceQuestionSerializer(
             task.questions.filter(type="choiceQuestion"), many=True)
+        order_question_serializer = OrderQuestionSerializer(
+            task.questions.filter(type="orderQuestion"), many=True)
 
         question_data = sorted(
-            question_serializer.data + choice_question_serializer.data,
+            question_serializer.data
+            + choice_question_serializer.data
+            + order_question_serializer.data,
             key=lambda question: question['id']
         )
 

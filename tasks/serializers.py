@@ -3,6 +3,8 @@ from rest_framework import serializers
 from userapi.serializers import UserDataSerializer
 from .models import Task, Question, Answer, Attempt
 
+import random
+
 
 class AnswerSerializer(serializers.Serializer):
     answer_num = serializers.IntegerField()
@@ -44,6 +46,18 @@ class ChoiceQuestionSerializer(QuestionSerializer):
             lambda answer: answer['text'],
             sorted(ret['answers'], key=lambda answer: answer['answer_num'])
         )
+
+        return ret
+
+class OrderQuestionSerializer(ChoiceQuestionSerializer):
+    def to_representation(self, instance):
+        ret = QuestionSerializer.to_representation(self, instance)
+
+        ret['answers'] = map(
+            lambda answer: answer['text'],
+            sorted(ret['answers'], key=lambda answer: random.choice((-1, 1)))
+        )
+
         return ret
 
 
@@ -85,6 +99,5 @@ class TaskSerializer(serializers.Serializer):
             ret["questions"][i] = ret["questions"][i]["title"]
 
         ret['status'] = instance.get_status(request.user)
-        print(instance, instance.is_finished(request.user), ret['status'])
 
         return ret

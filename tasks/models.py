@@ -36,7 +36,9 @@ class Question(models.Model):
     text = models.TextField()
     attempts_max = models.IntegerField(default=0)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='questions')
-    type_choices = (('textQuestion', 'textQuestion'), ('choiceQuestion', 'choiceQuestion'))
+    type_choices = [(choice, choice) for choice in (
+        'textQuestion', 'choiceQuestion', 'orderQuestion'
+    )]
     type = models.CharField(choices=type_choices,
                             max_length=16)
 
@@ -84,4 +86,3 @@ class Attempt(models.Model):
                 lastUserAttemptIDs.append(id_)
 
         return Attempt.objects.filter(id__in=lastUserAttemptIDs)
-
