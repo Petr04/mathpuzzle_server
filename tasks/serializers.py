@@ -53,10 +53,11 @@ class OrderQuestionSerializer(ChoiceQuestionSerializer):
     def to_representation(self, instance):
         ret = QuestionSerializer.to_representation(self, instance)
 
-        ret['answers'] = map(
+        ret['answers'] = list(map(
             lambda answer: answer['text'],
-            sorted(ret['answers'], key=lambda answer: random.choice((-1, 1)))
-        )
+            ret['answers']
+        ))
+        random.shuffle(ret['answers'])
 
         return ret
 

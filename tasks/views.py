@@ -81,12 +81,21 @@ class CheckView(APIView):
         elif question.type == 'choiceQuestion':
             correct = question.answers.get(
                 answer_num=int(request.GET['answer'])).is_true
+        elif question.type == 'orderQuestion':
+            answers = list(map(lambda x: x.text, question.answers.all()))
+            request_answers = dict(request.GET)['answers']
+            correct = answers == request_answers
+
+        if question.type in ['textQuestion', 'choiceQuestion']:
+            answer = request.GET['answer']
+        elif question.type == 'orderQuestion': # kostyl
+            answer = '0'
 
         attempt = Attempt.objects.create(
             question=question,
             user=request.user,
             value=correct,
-            answer=request.GET['answer']
+            answer=answer
         )
         attempt.save()
 
