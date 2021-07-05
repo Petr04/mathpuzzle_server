@@ -6,10 +6,13 @@ from rest_framework.generics import ListAPIView
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 
-from .models import Task, Question, Attempt
+from .models import Task, Question, Attempt, \
+    TextChoiceAttemptAnswer, OrderAttemptAnswer
 from userapi.models import User
 from .serializers import TaskSerializer, QuestionSerializer, \
     ChoiceQuestionSerializer, OrderQuestionSerializer, AttemptSerializer
+
+import json
 
 
 # Create your views here.
@@ -75,6 +78,7 @@ class CheckView(APIView):
     def get(self, request, pk):
         question = Question.objects.get(id=pk)
 
+        # Checking correctness
         if question.type == 'textQuestion':
             correct = question.answers.get(
                 answer_num=0).text == request.GET['answer']
@@ -86,17 +90,26 @@ class CheckView(APIView):
             request_answers = dict(request.GET)['answers']
             correct = answers == request_answers
 
-        if question.type in ['textQuestion', 'choiceQuestion']:
-            answer = request.GET['answer']
-        elif question.type == 'orderQuestion': # kostyl
-            answer = '0'
-
+        # Saving attempt
         attempt = Attempt.objects.create(
             question=question,
             user=request.user,
             value=correct,
-            answer=answer
         )
+
+        if question.type in ['textQuestion', 'choiceQuestion']:
+            answer = TextChoiceAttemptAnswer.objects.create(
+                attempt=attempt,
+                value=request.GET['answer']
+            )
+        elif question.type == 'orderQuestion':
+            answer = OrderAttemptAnswer.objects.create(
+                attempt=attempt,
+                value=json.dumps(request_answers)
+            )
+
+        attempt.answer = answer
+
         attempt.save()
 
         return Response({'correct': correct})

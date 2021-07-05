@@ -68,7 +68,6 @@ class Answer(models.Model):
 class Attempt(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='attempts')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attempts')
-    answer = models.CharField(max_length=64)
     value = models.BooleanField()
 
     def last(questions):
@@ -86,3 +85,30 @@ class Attempt(models.Model):
                 lastUserAttemptIDs.append(id_)
 
         return Attempt.objects.filter(id__in=lastUserAttemptIDs)
+
+    @property
+    def answer(self):
+        if self.question.type in ('textQuestion', 'choiceQuestion'):
+            return self.text_choice_answer
+        elif self.question.type == 'orderQuestion':
+            return self.order_answer
+
+    @answer.setter
+    def answer(self, value):
+        if self.question.type in ('textQuestion', 'choiceQuestion'):
+            self.text_choice_answer = value
+        elif self.question.type == 'orderQuestion':
+            self.order_answer = value
+
+
+class TextChoiceAttemptAnswer(models.Model):
+    attempt = models.OneToOneField(Attempt,
+        on_delete=models.CASCADE, related_name='text_choice_answer', null=True)
+
+    value = models.CharField(max_length=64)
+
+class OrderAttemptAnswer(models.Model):
+    attempt = models.OneToOneField(Attempt,
+        on_delete=models.CASCADE, related_name='order_answer', null=True)
+
+    value = models.CharField(max_length=64)

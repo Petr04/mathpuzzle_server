@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
 from userapi.serializers import UserDataSerializer
-from .models import Task, Question, Answer, Attempt
+from .models import Task, Question, Answer, Attempt, \
+    TextChoiceAttemptAnswer, OrderAttemptAnswer
 
 import random
+import json
 
 
 class AnswerSerializer(serializers.Serializer):
@@ -15,7 +17,6 @@ class AnswerSerializer(serializers.Serializer):
 class AttemptSerializer(serializers.Serializer):
     user = UserDataSerializer()
     value = serializers.BooleanField()
-    answer = serializers.CharField()
     id = serializers.IntegerField(read_only=True)
 
     def to_representation(self, instance):
@@ -23,6 +24,11 @@ class AttemptSerializer(serializers.Serializer):
         first_question_id = instance.question.task.questions.earliest('id').id
         current_question_id = instance.question.id
         ret['question_number'] = current_question_id - first_question_id
+
+        if instance.question.type in ('textQuestion', 'choiceQuestion'):
+            ret['answer'] = instance.answer.value
+        elif instance.question.type == 'orderQuestion':
+            ret['answer'] = json.loads(instance.answer.value)
 
         return ret
 
