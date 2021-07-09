@@ -32,7 +32,7 @@ class Task(models.Model):
 
 
 class Question(models.Model):
-    title = models.CharField(max_length=32)
+    title = models.CharField(max_length=64)
     text = models.TextField()
     attempts_max = models.IntegerField(default=0)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='questions')
@@ -58,7 +58,7 @@ class Question(models.Model):
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
     answer_num = models.IntegerField()
-    text = models.CharField(max_length=64)
+    text = models.CharField(max_length=256)
     is_true = models.BooleanField(default=False)
 
     def __str__(self):
@@ -105,10 +105,10 @@ class TextChoiceAttemptAnswer(models.Model):
     attempt = models.OneToOneField(Attempt,
         on_delete=models.CASCADE, related_name='text_choice_answer', null=True)
 
-    value = models.CharField(max_length=64)
+    value = models.CharField(max_length=256)
 
 class OrderAttemptAnswer(models.Model):
     attempt = models.OneToOneField(Attempt,
         on_delete=models.CASCADE, related_name='order_answer', null=True)
 
-    value = models.CharField(max_length=64)
+    value = models.CharField(max_length=256)
