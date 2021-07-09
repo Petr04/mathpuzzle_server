@@ -1,6 +1,6 @@
 *.sqlite3
 __pycache__/
 env/
-mathpuzzle_server/secret_key.py
+secret_key.py
 files/media/
 .idea/
