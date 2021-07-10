@@ -111,4 +111,4 @@ class OrderAttemptAnswer(models.Model):
     attempt = models.OneToOneField(Attempt,
         on_delete=models.CASCADE, related_name='order_answer', null=True)
 
-    value = models.CharField(max_length=256)
+    value = models.TextField()
