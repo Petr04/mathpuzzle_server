@@ -21,6 +21,8 @@ class AttemptSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        # ret['user'] = UserDataSerializer(instance.user).data
+
         first_question_id = instance.question.task.questions.earliest('id').id
         current_question_id = instance.question.id
         ret['question_number'] = current_question_id - first_question_id

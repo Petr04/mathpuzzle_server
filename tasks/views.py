@@ -91,26 +91,28 @@ class CheckView(APIView):
             correct = answers == request_answers
 
         # Saving attempt
-        attempt = Attempt.objects.create(
-            question=question,
-            user=request.user,
-            value=correct,
-        )
+        if not request.user.is_anonymous:
 
-        if question.type in ['textQuestion', 'choiceQuestion']:
-            answer = TextChoiceAttemptAnswer.objects.create(
-                attempt=attempt,
-                value=request.GET['answer']
-            )
-        elif question.type == 'orderQuestion':
-            answer = OrderAttemptAnswer.objects.create(
-                attempt=attempt,
-                value=json.dumps(request_answers)
+            attempt = Attempt.objects.create(
+                question=question,
+                user=request.user,
+                value=correct,
             )
 
-        attempt.answer = answer
+            if question.type in ['textQuestion', 'choiceQuestion']:
+                answer = TextChoiceAttemptAnswer.objects.create(
+                    attempt=attempt,
+                    value=request.GET['answer']
+                )
+            elif question.type == 'orderQuestion':
+                answer = OrderAttemptAnswer.objects.create(
+                    attempt=attempt,
+                    value=json.dumps(request_answers)
+                )
 
-        attempt.save()
+            attempt.answer = answer
+
+            attempt.save()
 
         return Response({'correct': correct})
 
@@ -118,29 +120,38 @@ class CheckView(APIView):
 def exclude_keys(d, keys):
     return {k: v for k, v in d.items() if k not in keys}
 
-class AttemptsView(ListAPIView):
-    serializer_class = AttemptSerializer
-    def get_queryset(self):
+class AttemptsView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
         filters = {}
 
-        if 'task' in self.request.GET:
-            filters['question__task'] = self.request.GET['task']
+        if 'task' in request.GET:
+            filters['question__task'] = request.GET['task']
+
         filters.update(
-            exclude_keys(dict(self.request.GET.items()), ('task', 'last'))
+            exclude_keys(dict(request.GET.items()), ('task', 'last'))
         )
 
-        ret = Attempt.objects.filter(**filters)
+        semi_filtered = Attempt.objects.filter(**filters)
+        filtered_object_list = []
+        for attempt in semi_filtered:
+            if request.user in (attempt.user, attempt.question.task.author):
+                filtered_object_list.append(attempt)
 
-        if self.request.GET.get('last'):
+        ret = Attempt.objects.filter(id__in=map(lambda x: x.id, filtered_object_list))
+
+        if request.GET.get('last'):
             # get last attempt from each user per question
 
-            if 'question' in self.request.GET:
+            if 'question' in request.GET:
                 questions = Question.objects.filter(
-                    id=self.request.GET['question'])
-            elif 'task' in self.request.GET:
+                    id=request.GET['question'])
+            elif 'task' in request.GET:
                 questions = Question.objects.filter(
-                    task=self.request.GET['task'])
+                    task=request.GET['task'])
 
-            return Attempt.last(questions)
+            last_attempt_list = Attempt.last(questions)
 
-        return ret
+            return Response( AttemptSerializer(last_attempt_list, many=True).data )
+
+        return Response( AttemptSerializer(ret, many=True).data )
