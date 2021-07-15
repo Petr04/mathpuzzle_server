@@ -13,5 +13,7 @@ $ pip freeze > requirements.txt
 ```
 
 ## Secret key
-To specify secret key, make `mathpuzzle_server/secret_key.py` file
-with `secret_key` variable assigned to secret key string
+To specify secret key, create `.env` file with `SECRET_KEY` variable:
+```
+SECRET_KEY="<your secret key>"
+```

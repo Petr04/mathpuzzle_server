@@ -1,6 +1,6 @@
 *.sqlite3
 __pycache__/
 env/
-secret_key.py
+.env
 files/media/
 .idea/
