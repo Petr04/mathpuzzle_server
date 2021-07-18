@@ -22,6 +22,15 @@ class TasksView(APIView):
 
     def get(self, request):
         tasks = Task.objects.all().order_by('-id')
+
+        if request.GET.get('filter'):
+            tasks = tasks.filter(title__contains=request.GET['filter'])
+
+        if 'limit' in request.GET:
+            limit = int(request.GET['limit'])
+            offset = int(request.GET.get('offset') or 0)
+            tasks = tasks[offset:offset+limit]
+
         tasks_serializer = TaskSerializer(tasks, many=True, context={
             'short': True,
             'request': request,
