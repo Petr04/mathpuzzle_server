@@ -1,5 +1,7 @@
 # Mathpuzzle server (API)
 
+[Demo](https://scipuzzle.ru)
+
 ## Dependencies
 Make and activate virtual environment.
 
